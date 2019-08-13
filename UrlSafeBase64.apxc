@@ -1,0 +1,23 @@
+public class UrlSafeBase64 {
+
+	public static Boolean isUrlSafe(String input) { return !input.containsAny('+/='); }
+
+	public static String originEncode(String input) {
+		String result = input.replace('-', '+').replace('_', '/');
+		Integer numOfPadding = 4 - Math.mod(result.length(), 4);
+		result = result + '='.repeat(numOfPadding);
+		return result;
+	}
+
+	public static String toUrlSafe(String input) { return input.replace('+', '-').replace('/', '_').replace('=', ''); }
+	
+	public static String encode(Blob input) {
+		String result = EncodingUtil.base64Encode(input);
+		return toUrlSafe(result);
+	}
+
+	public static String encode(String input) {
+		return encode(Blob.valueOf(input));
+	}
+
+}
