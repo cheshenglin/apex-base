@@ -1,0 +1,73 @@
+// The built-in Auth.JWT class is used for generating JWT structures, not for resolving.
+
+public class JwtResolver {
+
+	private final String header;
+
+	private final String payload;
+
+	private final String token;
+
+	private final String signature;
+
+	public JwtResolver(String fullToken) {
+		if (!UrlSafeBase64.isUrlSafe(fullToken)) { fullToken = UrlSafeBase64.toUrlSafe(fullToken); }
+		token = fullToken;
+        List<String> segments = fullToken.split('\\.');
+		header = segments[0];
+		payload = segments[1];
+		signature = segments[2];
+	}
+
+	public String getHeader() { return header; }
+
+	public String getPayload() { return payload; }
+
+	public String getSignature() { return signature; }
+
+	public String getToken() { return token; }
+
+	public boolean verify(Blob key) {
+		if (String.isEmpty(header) || String.isEmpty(payload) || String.isEmpty(signature)) { return false; }
+        Blob data = Blob.valueOf(header + '.' + payload);
+		String algoName = getSignatureAlgorithm();
+		if (String.isEmpty(algoName)) { return false; }
+		Blob hash = (algoName.startsWith('hmac')) ?
+			Crypto.generateMac(algoName, data, key) : Crypto.sign(algoName, data, key);
+		return signature.equals(UrlSafeBase64.encode(hash));
+	}
+	
+	private String getSignatureAlgorithm() {
+		Map<String, String> headerMap = parseHeader();
+		if (!'JWT'.equals(headerMap.get('typ'))) { return null; }
+		String algoName = headerMap.get('alg');
+		return getSupportedAlgorithms().get(algoName);
+	}
+
+	public Map<String, Object> parseClaims() {
+        String payloadToParse = UrlSafeBase64.originEncode(payload);
+        payloadToParse = EncodingUtil.base64Decode(payloadToParse).toString();
+        Map<String, Object> result = (Map<String, Object>)JSON.deserializeUntyped(payloadToParse);
+        return result;
+	}
+
+	public Map<String, String> parseHeader() {
+		String headerToParse = UrlSafeBase64.originEncode(header);
+        headerToParse = EncodingUtil.base64Decode(headerToParse).toString();
+		Map<String, String> result = (Map<String, String>)JSON.deserialize(headerToParse, Map<String, String>.class);
+		return result;
+	}
+
+	// JSON Web Algorithns: https://tools.ietf.org/html/rfc7518
+	// Apex supported hash-base MAC encryption algorithms include: hmacMD5, hmacSHA1, hmacSHA256, hmacSHA512
+	// Apex supported RSA Signature algorithms include: RSA-SHA1 and RSA-SHA256
+	// see also: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_restful_crypto.htm
+	private Map<String, String> getSupportedAlgorithms() {
+		Map<String, String> algorithms = new Map<String, String>();
+		algorithms.put('HS256', 'hmacSHA256');
+		algorithms.put('HS512', 'hmacSHA512');
+		algorithms.put('RS256', 'RSA-SHA256');
+		return algorithms;
+	}
+
+}
