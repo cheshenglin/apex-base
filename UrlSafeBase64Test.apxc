@@ -1,0 +1,29 @@
+@isTest
+public class UrlSafeBase64Test {
+
+	@isTest
+	public static void testBasics() {
+		System.assertEquals('IQ==', EncodingUtil.base64Encode(Blob.valueOf('!')));
+		System.assertEquals('IUA=', EncodingUtil.base64Encode(Blob.valueOf('!@')));
+		System.assertEquals('IUAj', EncodingUtil.base64Encode(Blob.valueOf('!@#')));
+
+		System.assertEquals('IQ', UrlSafeBase64.encode('!'));
+		System.assertEquals('IUA', UrlSafeBase64.encode('!@'));
+		System.assertEquals('IUAj', UrlSafeBase64.encode('!@#'));
+	}
+
+	@isTest
+	public static void testEncode() {
+		string input = '#說äöü';
+		string originEncoded = 'I+iqqsOkw7bDvA==';
+		System.assertEquals(originEncoded, EncodingUtil.base64Encode(Blob.valueOf(input)));
+		System.assertEquals(false, UrlSafeBase64.isUrlSafe(originEncoded));
+
+		string urlSafeEncoded = UrlSafeBase64.toUrlSafe(originEncoded);
+		System.assertEquals(true, UrlSafeBase64.isUrlSafe(urlSafeEncoded));
+		System.assertEquals(urlSafeEncoded, UrlSafeBase64.toUrlSafe(originEncoded));
+		System.assertEquals(urlSafeEncoded, UrlSafeBase64.encode(input));
+		System.assertEquals(originEncoded, UrlSafeBase64.originEncode(urlSafeEncoded));
+	}
+
+}
