@@ -1,0 +1,55 @@
+public class JsonHelper {
+
+	private static final Set<JSONToken> VALUE_TYPES;
+
+	static {
+		VALUE_TYPES = new Set<JSONToken>();
+		VALUE_TYPES.add(JSONToken.VALUE_FALSE);
+		VALUE_TYPES.add(JSONToken.VALUE_NULL);
+		VALUE_TYPES.add(JSONToken.VALUE_NUMBER_FLOAT);
+		VALUE_TYPES.add(JSONToken.VALUE_NUMBER_INT);
+		VALUE_TYPES.add(JSONToken.VALUE_STRING);
+		VALUE_TYPES.add(JSONToken.VALUE_TRUE);
+	}
+
+	public static Object getAttributeValue(String jsonInput, String name) {
+		if (!jsonInput.trim().startsWith('{')) { return jsonInput; }
+		try {
+			Map<String, Object> valueMap = (Map<String, Object>) JSON.deserializeUntyped(jsonInput);
+			return valueMap.get(name);
+		} catch (JSONException e) { return jsonInput; }
+	}
+
+	public static Integer getIntegerAttribute(String jsonString, String name) {
+		JSONParser parser = traverseToAttributeValue(jsonString, name);
+		if (parser == null) { return null; }
+		if (JSONToken.VALUE_NUMBER_INT != parser.getCurrentToken()) { return null; }
+		return parser.getIntegerValue();
+	}
+
+	public static String getTextAttribute(String jsonString, String name) {
+		JSONParser parser = traverseToAttributeValue(jsonString, name);
+		if (parser == null) { return null; }
+		if (JSONToken.VALUE_STRING != parser.getCurrentToken()) { return null; }
+		return parser.getText();
+	}
+
+	public static boolean isWithAttribute(String jsonString, String name, String value) {
+		String actual = getTextAttribute(jsonString, name);
+		return value.equals(actual);
+	}
+
+	public static JSONParser traverseToAttributeValue(String jsonString, String name) {
+		JSONParser parser = JSON.createParser(jsonString);
+		JSONToken token = parser.nextToken();
+		if (token != JSONToken.START_OBJECT) { return null; }
+		while (parser.nextToken() != null) {
+			token = parser.getCurrentToken();
+			if (token != JSONToken.FIELD_NAME) { continue; }
+			if (!name.equals(parser.getCurrentName())) { continue; }
+			if (VALUE_TYPES.contains(parser.nextToken())) { return parser; }
+		}
+		return null;
+	}
+
+}
