@@ -1,22 +1,32 @@
 @isTest
 public class JwtResolverTest {
-    
-    private static final String TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImp0aSI6ImJiMGQ0NWY1LTYyMjQtNDcwMS1hMGRiLTk4NmM0OTk1M2M2MSIsImlhdCI6MTU2NTU4MDU4NCwiZXhwIjoxNTY1NTg0MTg0fQ.sm4enADaettKgfeMIcdw6-jP7FIFCzhyiRJ1qZJuXvw';
 
-    @isTest
-    public static void testJwtResolver() {
-        JwtResolver resolver = new JwtResolver(TOKEN);
-        Map<String, String> header = resolver.parseHeader();
-        System.assertEquals('JWT', header.get('typ'));
-        System.assertEquals('HS256', header.get('alg'));
-        
-        Map<String, Object> claims = resolver.parseClaims();
-        System.assertEquals('1234567890', String.valueOf(claims.get('sub')));
-        System.assertEquals('John Doe', String.valueOf(claims.get('name')));
-        System.assertEquals('true', String.valueOf(claims.get('admin')));
-        System.assertEquals('bb0d45f5-6224-4701-a0db-986c49953c61', String.valueOf(claims.get('jti')));
-        System.assertEquals(1565580584, Integer.valueOf(claims.get('iat')));
-        System.assertEquals(1565584184, Integer.valueOf(claims.get('exp')));
-    }
-    
+	private static final String SECRET = '5EcR3t';
+
+	private static final String TOKEN_HS256 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwianRpIjoiYmIwZDQ1ZjUtNjIyNC00NzAxLWEwZGItOTg2YzQ5OTUzYzYxIiwiaWF0IjoxNTE2MjM5MDIyfQ.PJxl6VTKUu0gjYCq67td9aYSff0mIi2FRF8jPAGgExw';
+
+	private static final String TOKEN_HS512 = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwianRpIjoiYmIwZDQ1ZjUtNjIyNC00NzAxLWEwZGItOTg2YzQ5OTUzYzYxIiwiaWF0IjoxNTE2MjM5MDIyfQ.5qb6hGcc5dhKZR2-pOeYWYnSpPY1JgabMQOawx_H8fazSYID0DJU0hgp8f4Az1Os9USTNNQIXFndEuWTWiPoaQ';
+
+	@isTest
+	public static void testJwtResolver() {
+		JwtResolver resolver = new JwtResolver(TOKEN_HS256);
+		Map<String, String> header = resolver.parseHeader();
+		System.assertEquals('JWT', header.get('typ'));
+		System.assertEquals('HS256', header.get('alg'));
+
+		Map<String, Object> claims = resolver.parseClaims();
+		System.assertEquals('1234567890', String.valueOf(claims.get('sub')));
+		System.assertEquals('John Doe', String.valueOf(claims.get('name')));
+		System.assertEquals('bb0d45f5-6224-4701-a0db-986c49953c61', String.valueOf(claims.get('jti')));
+		System.assertEquals(1516239022, Integer.valueOf(claims.get('iat')));
+	}
+
+	@isTest
+	public static void testVerify() {
+		JwtResolver resolver = new JwtResolver(TOKEN_HS256);
+		System.assert(resolver.verify(SECRET));
+		resolver = new JwtResolver(TOKEN_HS512);
+		System.assert(resolver.verify(SECRET));
+	}
+
 }
