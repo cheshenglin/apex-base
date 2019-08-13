@@ -1,0 +1,2 @@
+# reclassifies `.apxc` files as Java:
+*.apxc linguist-language=Java
