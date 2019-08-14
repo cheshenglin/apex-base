@@ -1,5 +1,9 @@
-// The built-in Auth.JWT class is used for generating JWT structures, not for resolving.
-
+/**
+ * This class is used for resolving JWT string and as a complement class to the built-in Auth.JWT
+ * class, which is used for generating JWT structures.
+ *
+ * @author Che-Sheng Lin <chesheng@gmail.com>
+ */
 public class JwtResolver {
 
 	private final String header;
