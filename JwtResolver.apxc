@@ -45,14 +45,6 @@ public class JwtResolver {
 		return result;
 	}
 
-	public boolean verify(Blob key, String algoName) {
-		if (String.isEmpty(header) || String.isEmpty(payload) || String.isEmpty(signature) || String.isEmpty(algoName)) { return false; }
-		Blob data = Blob.valueOf(header + '.' + payload);
-		Blob hash = (algoName.startsWith('hmac')) ?
-			Crypto.generateMac(algoName, data, key) : Crypto.sign(algoName, data, key);
-		return signature.equals(UrlSafeBase64.encode(hash));
-	}
-
 	public boolean verify(String key) {
 		String algoName = getSignatureAlgorithm();
 		Blob blobKey = algoName.startsWith('hmac') ? Blob.valueOf(key) : EncodingUtil.base64Decode(key);
@@ -76,6 +68,14 @@ public class JwtResolver {
 		algorithms.put('HS512', 'hmacSHA512');
 		algorithms.put('RS256', 'RSA-SHA256');
 		return algorithms;
+	}
+
+	private boolean verify(Blob key, String algoName) {
+		if (String.isEmpty(header) || String.isEmpty(payload) || String.isEmpty(signature) || String.isEmpty(algoName)) { return false; }
+		Blob data = Blob.valueOf(header + '.' + payload);
+		Blob hash = (algoName.startsWith('hmac')) ?
+			Crypto.generateMac(algoName, data, key) : Crypto.sign(algoName, data, key);
+		return signature.equals(UrlSafeBase64.encode(hash));
 	}
 
 }
