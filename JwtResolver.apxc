@@ -31,27 +31,6 @@ public class JwtResolver {
 
 	public String getToken() { return token; }
 
-	public boolean verify(Blob key) {
-		if (String.isEmpty(header) || String.isEmpty(payload) || String.isEmpty(signature)) { return false; }
-		Blob data = Blob.valueOf(header + '.' + payload);
-		String algoName = getSignatureAlgorithm();
-		if (String.isEmpty(algoName)) { return false; }
-		Blob hash = (algoName.startsWith('hmac')) ?
-			Crypto.generateMac(algoName, data, key) : Crypto.sign(algoName, data, key);
-		return signature.equals(UrlSafeBase64.encode(hash));
-	}
-
-	public boolean verify(String key) {
-		return verify(Blob.valueOf(key));
-	}
-
-	private String getSignatureAlgorithm() {
-		Map<String, String> headerMap = parseHeader();
-		if (!'JWT'.equals(headerMap.get('typ'))) { return null; }
-		String algoName = headerMap.get('alg');
-		return getSupportedAlgorithms().get(algoName);
-	}
-
 	public Map<String, Object> parseClaims() {
 		String payloadToParse = UrlSafeBase64.originEncode(payload);
 		payloadToParse = EncodingUtil.base64Decode(payloadToParse).toString();
@@ -64,6 +43,27 @@ public class JwtResolver {
 		headerToParse = EncodingUtil.base64Decode(headerToParse).toString();
 		Map<String, String> result = (Map<String, String>)JSON.deserialize(headerToParse, Map<String, String>.class);
 		return result;
+	}
+
+	public boolean verify(Blob key, String algoName) {
+		if (String.isEmpty(header) || String.isEmpty(payload) || String.isEmpty(signature) || String.isEmpty(algoName)) { return false; }
+		Blob data = Blob.valueOf(header + '.' + payload);
+		Blob hash = (algoName.startsWith('hmac')) ?
+			Crypto.generateMac(algoName, data, key) : Crypto.sign(algoName, data, key);
+		return signature.equals(UrlSafeBase64.encode(hash));
+	}
+
+	public boolean verify(String key) {
+		String algoName = getSignatureAlgorithm();
+		Blob blobKey = algoName.startsWith('hmac') ? Blob.valueOf(key) : EncodingUtil.base64Decode(key);
+		return verify(blobKey, algoName);
+	}
+
+	private String getSignatureAlgorithm() {
+		Map<String, String> headerMap = parseHeader();
+		if (!'JWT'.equals(headerMap.get('typ'))) { return null; }
+		String algoName = headerMap.get('alg');
+		return getSupportedAlgorithms().get(algoName);
 	}
 
 	// JSON Web Algorithns: https://tools.ietf.org/html/rfc7518
