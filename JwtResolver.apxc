@@ -23,6 +23,11 @@ public class JwtResolver {
 		signature = segments[2];
 	}
 
+	public JwtResolver(RestRequest request) {
+		String token = request.headers.get('Token');
+		this(token);
+	}
+
 	public String getHeader() { return header; }
 
 	public String getPayload() { return payload; }
