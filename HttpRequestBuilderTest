@@ -1,0 +1,18 @@
+@isTest
+public class HttpRequestBuilderTest {
+
+	@isTest
+	public static void testBuild() {
+		String baseUrl = System.URL.getSalesforceBaseURL().toExternalForm();
+		System.assert(baseUrl.endsWith('my.salesforce.com'));
+		HttpRequest request = new HttpRequestBuilder(baseUrl + '/services/apexrest/echo', 'GET')
+			.authToken('secret')
+			.body('test body')
+			.deafultHeader()
+			.header('From', 'sfdc@qnap.com')
+			.build();
+		System.assert(request != null);
+		System.assertEquals(baseUrl + '/services/apexrest/echo', request.getEndpoint());
+	}
+
+}
