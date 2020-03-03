@@ -1,0 +1,58 @@
+public class HttpRequestBuilder {
+
+	private final String method;
+
+	private final String url;
+
+	private Blob blobBody = null;
+
+	private Map<String, String> headers = new Map<String, String>();
+
+	private String stringBody = null;
+
+	public HttpRequestBuilder(String url, String method) {
+		this.method = method;
+		this.url = url.replace(' ', '%20');
+	}
+
+	public HttpRequestBuilder authToken(String token) {
+		headers.put('authorization', 'Bearer ' + token);
+		return this;
+	}
+
+	public HttpRequestBuilder body(Blob body) {
+		blobBody = body;
+		return this;
+	}
+
+	public HttpRequestBuilder body(String body) {
+		stringBody = body;
+		return this;
+	}
+
+	public HttpRequestBuilder deafultHeader() {
+		headers.put('Accept', '*/*');
+		headers.put('Accept-Encoding', 'gzip, deflate');
+		headers.put('Accept-Language', 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6');
+		headers.put('Connection', 'keep-alive');
+		headers.put('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36');
+		return this;
+	}
+
+	public HttpRequestBuilder header(String key, String value) {
+		headers.put(key, value);
+		return this;
+	}
+
+	public HttpRequest build() {
+		HttpRequest request = new HttpRequest();
+		request.setEndpoint(url);
+		request.setMethod(method);
+		request.setTimeout(60000);
+		for (String key : headers.keySet()) { request.setHeader(key, headers.get(key)); }
+		if (stringBody != null) { request.setBody(stringBody); }
+		if (blobBody != null) { request.setBodyAsBlob(blobBody); }
+		return request;
+	}
+
+}
